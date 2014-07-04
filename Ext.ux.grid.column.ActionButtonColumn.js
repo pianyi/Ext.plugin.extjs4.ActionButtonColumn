@@ -95,9 +95,19 @@ Ext.define('Ext.ux.grid.column.ActionButtonColumn', {
      */
     header: '&#160;',
 
+    draggable: false,
+    resizable : false,
     sortable: false,
     btns: [],
     editBtns: [],
+
+    editor:{
+        xtype:'displayfield',
+        style:{
+            'text-align': 'center'
+        }
+    },
+    styleHtmlContent:true,
 
     constructor: function(config) {
 
@@ -190,7 +200,21 @@ Ext.define('Ext.ux.grid.column.ActionButtonColumn', {
 
                 Ext.Function.defer(me.createGridButton, 100, me, [item.text, nid, rec, cls, fun, hide, iconCls, isEdit]);
 
-                v += '<div id="' + nid + '">&#160;</div>';
+                var style = '';
+                if(isEdit){
+
+                    if(!Ext.isEmpty(me.btns) && me.btns.length > 0){
+
+                        // エディットモードの場合は、ボタンの高さを先に指定することで、上下のずれを修正する。
+                        style = Ext.String.format('style="height:{0}"', me.btns.get(0).getHeight());
+
+                    } else {
+
+                        style = Ext.String.format('style="height:{0}"', 22);
+                    }
+                }
+
+                v += Ext.String.format('<div id="{0}" {1}>&#160;</div>', nid, style);
             }
             return v;
         };
@@ -205,6 +229,7 @@ Ext.define('Ext.ux.grid.column.ActionButtonColumn', {
 
     createGridButton: function(value, id, record, cls, fn, hide, iconCls, isEdit) {
 
+        var me = this;
         var target = Ext.get(id);
 
         if (target !== null) {
