@@ -49,7 +49,10 @@
  *                     }
  *                 },{
  *                     text: 'Schedule Meeting',
- *                     eventName: 'scheduleMeeting'
+ *                     eventName: 'scheduleMeeting',
+ *                 },{
+ *                     text: 'fireEvent is girdpanel',
+ *                     isGridEvent: true
  *                 }]
  *             }
  *         ],
@@ -86,12 +89,15 @@ Ext.define('Ext.ux.grid.column.ActionButtonColumn', {
      * <li><code>handler</code> : Function<div class="sub-desc">A function called when the button is clicked.</div></li>
      * <li><code>scope</code> : Ref<div class="sub-desc">The scope (<em>this</em>) of the handler function.</div></li>
      * <li><code>cls</code> : String<div class="sub-desc">cls spefies the class of the button. In addition, if there is no handler or eventName set the class is stripped down to Alpha characters and suffixed with "click" to create an event on the parent gridview</div></li>
+     * <li><code>isGridEvent</code> : Boolean<div class="sub-desc">Optional. クリックした場合にイベントの発生場所を GridPanel に変更する。true is gird.fireEvent. false is girdview.fireEvent</div></li>
      * </ul></div>
      */
     header: '&#160;',
 
     sortable: false,
     btns: [],
+    editBtns: [],
+
     constructor: function(config) {
 
         var me = this,
@@ -100,7 +106,9 @@ Ext.define('Ext.ux.grid.column.ActionButtonColumn', {
         l = items.length,
         i,
         item;
+
         me.btns = new Ext.util.MixedCollection();
+        me.editBtns = new Ext.util.MixedCollection();
         // This is a Container. Delete the items config to be reinstated after construction.
         delete cfg.items;
         me.callParent([cfg]);
@@ -110,7 +118,11 @@ Ext.define('Ext.ux.grid.column.ActionButtonColumn', {
         var gv = '';
 
         // Renderer closure iterates through items creating a button element for each and tagging with an identifying
-        me.renderer = function(v, meta, rec, rowIndex, colIndex, store, view) {
+        me.renderer = function(v, meta, rec, rowIndex, colIndex, store, view, isEdit) {
+
+            if(Ext.isEmpty(isEdit)){
+                isEdit = false;
+            }
 
             if (gv == '') {
                 gv = view;
@@ -128,6 +140,7 @@ Ext.define('Ext.ux.grid.column.ActionButtonColumn', {
                     }
                 });
                 view.addEvents(evnts);
+                view.panel.addEvents(evnts);
             }
 
             //  Allow a configured renderer to create initial value (And set the other values in the "metadata" argument!)
@@ -144,6 +157,7 @@ Ext.define('Ext.ux.grid.column.ActionButtonColumn', {
                 var iconCls = item.iconIndex ? rec.data[item.iconIndex] : (item.iconCls ? item.iconCls : '');
                 var fun = Ext.emptyFn;
                 var context = me;
+                var eventPanel = item.isGridEvent ? view.panel : view;
                 if (item.handler) {
                     if (item.context) {
                         context = item.context;
@@ -160,9 +174,9 @@ Ext.define('Ext.ux.grid.column.ActionButtonColumn', {
                         }
                         fun = function() {
                             if (eventName != 'actionbuttonclick') {
-                                view.fireEvent('actionbuttonclick', this, view, rowIndex, colIndex);
+                                eventPanel.fireEvent('actionbuttonclick', this, view, rowIndex, colIndex);
                             }
-                            view.fireEvent(eventName, view, rowIndex, colIndex);
+                            eventPanel.fireEvent(eventName, view, rowIndex, colIndex);
                         }
                     })(item);
                 }
@@ -173,16 +187,25 @@ Ext.define('Ext.ux.grid.column.ActionButtonColumn', {
                     hide = rec.data[item.hideIndex];
                 }
 
-                Ext.Function.defer(me.createGridButton, 100, me, [item.text, nid, rec, cls, fun, hide, iconCls]);
+                Ext.Function.defer(me.createGridButton, 100, me, [item.text, nid, rec, cls, fun, hide, iconCls, isEdit]);
 
                 v += '<div id="' + nid + '">&#160;</div>';
             }
             return v;
         };
+
+        me.editRenderer = function(v, meta, rec, rowIndex, colIndex, store, view) {
+
+            me.deleteEditButton();
+
+            return me.renderer(v, meta, rec, rowIndex, colIndex, store, view, true);
+        };
     },
 
-    createGridButton: function(value, id, record, cls, fn, hide, iconCls) {
+    createGridButton: function(value, id, record, cls, fn, hide, iconCls, isEdit) {
+
         var target = Ext.get(id);
+
         if (target !== null) {
             var btn = new Ext.Button({
                 text: value,
@@ -192,7 +215,13 @@ Ext.define('Ext.ux.grid.column.ActionButtonColumn', {
                 handler: fn,
                 renderTo: target.parent()
             });
-            this.btns.add(btn);
+
+            if(isEdit){
+                this.editBtns.add(btn);
+            } else {
+                this.btns.add(btn);
+            }
+
             Ext.get(id).remove();
         }
     },
@@ -203,7 +232,18 @@ Ext.define('Ext.ux.grid.column.ActionButtonColumn', {
         this.btns.each(function(btn){
             btn.destroy();
         });
+        this.editBtns.each(function(btn){
+            btn.destroy();
+        });
         return this.callParent(arguments);
+    },
+
+    deleteEditButton:function(){
+
+        this.editBtns.each(function(btn){
+            btn.destroy();
+        });
+
     },
 
     cascade: function(fn, scope) {
