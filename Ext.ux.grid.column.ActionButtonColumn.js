@@ -95,8 +95,6 @@ Ext.define('Ext.ux.grid.column.ActionButtonColumn', {
      */
     header: '&#160;',
 
-    draggable: false,
-    resizable : false,
     sortable: false,
     btns: [],
     editBtns: [],
@@ -229,7 +227,6 @@ Ext.define('Ext.ux.grid.column.ActionButtonColumn', {
 
     createGridButton: function(value, id, record, cls, fn, hide, iconCls, isEdit) {
 
-        var me = this;
         var target = Ext.get(id);
 
         if (target !== null) {
