@@ -72,6 +72,7 @@ Ext.define('Ext.ux.grid.column.ActionButtonColumn', {
     /**
      * @cfg {Function} handler A function called when the button is clicked.
      * The handler(or event) is passed the following parameters:<div class="mdetail-params"><ul>
+     * <li><code>grid</code> : GridPanel<div class="sub-desc">設定されている Grid Panel.</div></li>
      * <li><code>view</code> : TableView<div class="sub-desc">The owning TableView.</div></li>
      * <li><code>rowIndex</code> : Number<div class="sub-desc">The row index clicked on.</div></li>
      * <li><code>colIndex</code> : Number<div class="sub-desc">The column index clicked on.</div></li>
@@ -89,7 +90,7 @@ Ext.define('Ext.ux.grid.column.ActionButtonColumn', {
      * <li><code>handler</code> : Function<div class="sub-desc">A function called when the button is clicked.</div></li>
      * <li><code>scope</code> : Ref<div class="sub-desc">The scope (<em>this</em>) of the handler function.</div></li>
      * <li><code>cls</code> : String<div class="sub-desc">cls spefies the class of the button. In addition, if there is no handler or eventName set the class is stripped down to Alpha characters and suffixed with "click" to create an event on the parent gridview</div></li>
-     * <li><code>isGridEvent</code> : Boolean<div class="sub-desc">Optional. クリックした場合にイベントの発生場所を GridPanel に変更する。true is gird.fireEvent. false is girdview.fireEvent</div></li>
+     * <li><code>isGridEvent</code> : Boolean<div class="sub-desc">Optional. イベントの発生場所を GridPanel に変更する。true is gird.fireEvent. false is girdview.fireEvent.</div></li>
      * </ul></div>
      */
     header: '&#160;',
@@ -174,9 +175,9 @@ Ext.define('Ext.ux.grid.column.ActionButtonColumn', {
                         }
                         fun = function() {
                             if (eventName != 'actionbuttonclick') {
-                                eventPanel.fireEvent('actionbuttonclick', this, view, rowIndex, colIndex);
+                                eventPanel.fireEvent('actionbuttonclick', this, view.panel, view, rowIndex, colIndex);
                             }
-                            eventPanel.fireEvent(eventName, view, rowIndex, colIndex);
+                            eventPanel.fireEvent(eventName, view.panel, view, rowIndex, colIndex);
                         }
                     })(item);
                 }
